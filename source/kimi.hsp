@@ -1,13 +1,13 @@
 /*
  * ソフト名：君の改修手帳
- * バージョン：1.0.0
+ * バージョン：1.0.1
  * 最終更新日：2016/10/22
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 #define LAST_UP_DATE "2016/10/22"
 
 #const global TRUE 1
@@ -258,6 +258,8 @@
 					}
 				next
 				if(flg == FALSE) :_continue
+			}else{
+				if(checkbox_class_flg@Setting(DB_CLASS_COUNT@Setting - 1) == FALSE) :_continue
 			}
 			// リストに追加
 			screw_str = kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase + combox_step_index@Setting * 4)
