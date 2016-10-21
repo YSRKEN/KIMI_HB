@@ -1,0 +1,383 @@
+/*
+ * ソフト名：君の改修手帳
+ * バージョン：1.0.0
+ * 最終更新日：2016/10/22
+ */
+
+#packopt name "kimi"
+
+#define SOFT_NAME "君の改修手帳"
+#define VERSION "1.0.0"
+#define LAST_UP_DATE "2016/10/22"
+
+#const global TRUE 1
+#const global FALSE 0
+#const WM_COMMAND $111
+
+#module Setting
+	// 表示ジャンル選択時のチェック数
+	#const DB_CLASS_COUNT 8
+	// 設定初期化
+	#deffunc initSetting
+		// 表示する改修ジャンルのチェック
+		dim checkbox_class_flg, DB_CLASS_COUNT
+		checkbox_class_flg(0) = TRUE
+		// 確実化のチェック
+		checkbox_success_flg = false
+		// 改修段階
+		combox_step_index = 0
+		// ブクマした装備一覧
+		sdim bookmark_weapon_list, 32000
+
+		// iniファイルをロード
+		notesel save_text
+		exist "save_data.ini"
+		if(strsize != -1){
+			noteload "save_data.ini"
+			for k, 0, notemax
+				noteget get, k
+				split get, ":", temp
+				if(length(temp) < 2) :_continue
+				if(temp(0) == "checkbox_class_flg"){
+					split temp(1), " ", temp2
+					for n, 0, length(temp2)
+						if(n >= DB_CLASS_COUNT) :_break
+						checkbox_class_flg(n) = int(temp2(n))
+						if(checkbox_class_flg(n) != 0) :checkbox_class_flg(n) = 1
+					next
+				}
+				if(temp(0) == "checkbox_success_flg"){
+					checkbox_success_flg = int(temp(1))
+					if(checkbox_success_flg != 0) :checkbox_success_flg = 1
+				}
+				if(temp(0) == "combox_step_index"){
+					combox_step_index = limit(int(temp(1)), 0, 2)
+				}
+				if(temp(0) == "bookmark_weapon_list"){
+					bookmark_weapon_list = temp(1)
+				}
+			next
+		}
+	return
+	// ブクマを更新
+	#deffunc changeFavorite
+		if(listbox_weapon_index@GUI == -1) :return
+		notesel listbox_weapon_data@GUI
+		noteget weapon_name, listbox_weapon_index@GUI
+		weapon_name = normName(weapon_name)
+		if(checkbox_favorite_flg){
+			if(instr(bookmark_weapon_list,,"'" + weapon_name + "'") == -1){
+				bookmark_weapon_list += "'" + weapon_name + "'"
+			}
+		}else{
+			if(instr(bookmark_weapon_list,,"'" + weapon_name + "'") != -1){
+				strrep bookmark_weapon_list, "'" + weapon_name + "'", ""
+			}
+		}
+	return
+	// 設定保存
+	#deffunc saveSetting
+		sdim save_text, 32000
+		save_text += "checkbox_class_flg:"
+		for k, 0, DB_CLASS_COUNT
+			if(k != 0) :save_text += " "
+			save_text += "" + checkbox_class_flg(k)
+		next
+		save_text += "\n"
+		save_text += "checkbox_success_flg:" + checkbox_success_flg + "\n"
+		save_text += "combox_step_index:" + combox_step_index + "\n"
+		save_text += "bookmark_weapon_list:" + bookmark_weapon_list + "\n"
+		notesel save_text
+		notesave "save_data.ini"
+	return
+#global
+
+#module DataBase
+	// データベースの各列
+	#enum DB_CLASS_INDEX 0	// 分類
+	#enum DB_TYPE_INDEX		// 小分類
+	#enum DB_NAME_INDEX		// 装備
+	#enum DB_FUEL_INDEX		// 燃料
+	#enum DB_AMMO_INDEX		// 弾薬
+	#enum DB_STEEL_INDEX	// 鋼材
+	#enum DB_BAUXITE_INDEX	// ボーキ
+	#enum DB_MATERIAL1_INDEX	// 開発1
+	#enum DB_SCREW1_INDEX		// 改修1
+	#enum DB_USE1_INDEX			// 消費1
+	#enum DB_WEAPON1_INDEX		// 装備1
+	#enum DB_MATERIAL2_INDEX	// 開発2
+	#enum DB_SCREW2_INDEX		// 改修2
+	#enum DB_USE2_INDEX			// 消費2
+	#enum DB_WEAPON2_INDEX		// 装備2
+	#enum DB_MATERIAL3_INDEX	// 開発3
+	#enum DB_SCREW3_INDEX		// 改修3
+	#enum DB_USE3_INDEX			// 消費3
+	#enum DB_WEAPON3_INDEX		// 装備3
+	#enum DB_UPDATE_INDEX		// 更新後
+	#enum DB_SUN_INDEX	// 日
+	#enum DB_MON_INDEX	// 月
+	#enum DB_TUE_INDEX	// 火
+	#enum DB_WED_INDEX	// 水
+	#enum DB_THU_INDEX	// 木
+	#enum DB_FRI_INDEX	// 金
+	#enum DB_SAT_INDEX	// 土
+	#enum DB_COLUMN_SIZE
+	// データベースの初期化
+	#deffunc initDB
+		// データを読み込み
+		notesel text_buffer
+		noteload "kisu.tsv"
+		// 二次元配列に流し込む
+		db_row_size = notemax - 1
+		sdim kisu_data, 256, db_row_size, DB_COLUMN_SIZE
+		for ri, 0, db_row_size
+			noteget getline, ri + 1
+			split getline, "\t", temp
+			for ci, 0, DB_COLUMN_SIZE
+				kisu_data(ri, ci) = temp(ci)
+			next
+		next
+	return
+#global
+
+#module GUI
+	#const OBJ_SPACE 10
+	#const OBJ_X 60
+	#const OBJ_Y 20
+	#const OBJ_X_SMALL 50
+	#define ctype POS_X(%1) (((%1) + 1) * OBJ_SPACE + (%1) * OBJ_X)
+	#define ctype POS_Y(%1) (((%1) + 1) * OBJ_SPACE + (%1) * OBJ_Y)
+	#define ctype OBJ_X2(%1) ((%1) * OBJ_X + (%1 - 1) * OBJ_SPACE)
+	#define ctype OBJ_Y2(%1) (((%1)) * OBJ_Y + (%1 - 1) * OBJ_SPACE)
+	#define POS_XY(%1, %2) pos POS_X(%1), POS_Y(%2)
+	#const GUI_WIDTH DB_CLASS_COUNT@Setting / 2 + 2
+	#const GUI_HEIGHT 13
+	// 長方形を描画
+	#deffunc boxf2 int px_, int py_, int wx_, int wy_
+		boxf px_, py_, px_ + wx_, py_ + wy_
+	return
+	// 装備名を正規化
+	#defcfunc normName str weapon_name_
+		weapon_name__ = weapon_name_
+		kakko_idx = instr(weapon_name__,,"]")
+	return strmid(weapon_name__, kakko_idx + 1, strlen(weapon_name__) - kakko_idx + 1)
+	// GUIの初期化
+	#deffunc initGUI
+		// 画面
+		screen 0, POS_X(GUI_WIDTH), POS_Y(GUI_HEIGHT)
+		title SOFT_NAME@ + " Ver." + VERSION@ + " (" + LAST_UP_DATE@ + ")"
+		syscolor 15 :boxf
+		// チェックボックス
+		dim checkbox_class_id, DB_CLASS_COUNT@Setting
+		checkbox_class_str.0 = "主砲", "副空", "魚雷", "艦載", "対潜", "電探", "他", "☆"
+		objsize OBJ_X_SMALL, OBJ_Y
+		for ci, 0, DB_CLASS_COUNT@Setting
+			pos POS_X(3) + OBJ_X_SMALL * (ci \ 4), POS_Y(ci / 4)
+			chkbox checkbox_class_str(ci), checkbox_class_flg@Setting(ci)
+			checkbox_class_id@Setting(ci) = stat
+		next
+		// 各チェックボックスの色
+		// checkbox_class_color_r.0 = 255, 204,  35,   0, 153, 255, 204, 255
+		// checkbox_class_color_g.0 =  68, 254,  85, 128, 220, 201, 203, 254
+		// checkbox_class_color_b.0 =  50,  84, 253,  64, 253,  14, 202,   0
+		POS_XY 1, 0
+		objsize OBJ_X, OBJ_Y
+		chkbox "確実化", checkbox_success_flg@Setting
+		checkbox_success_id = stat
+		POS_XY 2, 0
+		objsize OBJ_X2(1), OBJ_Y
+		chkbox "ブクマ", checkbox_favorite_flg@Setting
+		checkbox_favorite_id = stat
+		// コンボボックス
+		POS_XY 0, 0
+		objsize OBJ_X, OBJ_Y
+		combox_week_index = gettime(2)
+		combox combox_week_index,, "日曜日\n月曜日\n火曜日\n水曜日\n木曜日\n金曜日\n土曜日\n全て"
+		combox_week_id = stat
+		POS_XY 0, 1
+		objsize OBJ_X2(2), OBJ_Y
+		combox combox_step_index@Setting,, "無印～☆+5\n☆+6～☆+9\n☆MAX"
+		combox_step_id = stat
+		// リストボックス
+		POS_XY 0, 2
+		objsize OBJ_X2(3), OBJ_Y2(GUI_HEIGHT - 3)
+		listbox listbox_weapon_index, OBJ_Y , ""
+		listbox_weapon_id = stat
+		// メッセージボックス
+		sdim repair_message, 32000
+		POS_XY 3, 2
+		mesbox repair_message, OBJ_X2(3), OBJ_Y2(GUI_HEIGHT - 2), 4
+		repair_message_id = stat
+
+		// リストを更新
+		refreshListBox
+	return
+	// リストボックスを更新
+	#deffunc refreshListBox
+		// 検索を実施
+		sdim listbox_weapon_data, 32000
+		SearchMethod listbox_weapon_data
+		// 検索結果を反映
+		objprm listbox_weapon_id, listbox_weapon_data
+	return
+	// メッセージボックスを更新
+	#deffunc refreshMesBox
+		// 表示用データを作成
+		notesel listbox_weapon_data
+		noteget weapon_name, listbox_weapon_index
+		weapon_name = normName(weapon_name)
+		ShowMethod weapon_name, repair_message
+		// 検索結果を反映
+		objprm repair_message_id, repair_message
+	return
+#global
+
+#module ViewModel
+	// 検索を実施して、リストボックスに反映する
+	#deffunc SearchMethod var listbox_weapon_data_
+		class_str.0 = "主砲", "副空", "魚雷", "艦載", "対潜", "電探", "他"
+		listbox_weapon_data_ = ""
+		for ri, 0, db_row_size@DataBase
+			// 曜日チェック(曜日を「全て」にしている場合を除く)
+			if(combox_week_index@GUI != 7){
+				if(kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + combox_week_index@GUI) == "×"){
+					_continue
+				}
+			}
+			// 改修段階チェック
+			if((combox_step_index@Setting == 2) && (kisu_data@DataBase(ri, DB_UPDATE_INDEX@DataBase) == "―")){
+				_continue
+			}
+			// 改修ジャンルチェック
+			if(instr(bookmark_weapon_list@Setting,,"'" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "'") == -1){
+				flg = FALSE
+				for k, 0, length(class_str)
+					if((kisu_data@DataBase(ri, DB_CLASS_INDEX@DataBase) == class_str(k)) && (checkbox_class_flg@Setting(k))){
+						flg = TRUE
+						_break
+					}
+				next
+				if(flg == FALSE) :_continue
+			}
+			// リストに追加
+			screw_str = kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase + combox_step_index@Setting * 4)
+			split screw_str, "/", temp
+			listbox_weapon_data_ += "[" + temp(checkbox_success_flg@Setting) + "]" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "\n"
+		next
+	return
+	// 選択したリストの項目について表示する
+	#deffunc ShowMethod str weapon_name_, var repair_message_
+		repair_message_ = ""
+		week_str.0 = "日", "月", "火", "水", "木", "金", "土"
+		for ri, 0, db_row_size@DataBase
+			// 同一名称の装備を探す
+			if(kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) != weapon_name_) :_continue
+			// 結果を整形して表示する
+			repair_message_ += kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "\n"
+			repair_message_ += "　燃：" + kisu_data@DataBase(ri, DB_FUEL_INDEX@DataBase) + " "
+			repair_message_ += "弾：" + kisu_data@DataBase(ri, DB_AMMO_INDEX@DataBase) + " "
+			repair_message_ += "鋼：" + kisu_data@DataBase(ri, DB_STEEL_INDEX@DataBase) + " "
+			repair_message_ += "ボ：" + kisu_data@DataBase(ri, DB_BAUXITE_INDEX@DataBase) + "\n"
+			for wi, 0, 7
+				repair_message_ += "　　" + week_str(wi) + "：" + kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + wi) + "\n"
+			next
+			repair_message_ += "\n[無印～☆+5]\n"
+			repair_message_ += "　開発：" + kisu_data@DataBase(ri, DB_MATERIAL1_INDEX@DataBase)
+			repair_message_ += "　改修：" + kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase) + "\n"
+			if(kisu_data@DataBase(ri, DB_USE1_INDEX@DataBase) != "0"){
+				repair_message_ += "　装備：" + kisu_data@DataBase(ri, DB_WEAPON1_INDEX@DataBase) + "\n"
+			}
+			repair_message_ += "[☆+6～☆+9]\n"
+			repair_message_ += "　開発：" + kisu_data@DataBase(ri, DB_MATERIAL2_INDEX@DataBase)
+			repair_message_ += "　改修：" + kisu_data@DataBase(ri, DB_SCREW2_INDEX@DataBase) + "\n"
+			if(kisu_data@DataBase(ri, DB_USE2_INDEX@DataBase) != "0"){
+				repair_message_ += "　装備：" + kisu_data@DataBase(ri, DB_WEAPON2_INDEX@DataBase) + "\n"
+			}
+			if(kisu_data@DataBase(ri, DB_UPDATE_INDEX@DataBase) != "―"){
+				repair_message_ += "[☆MAX]\n"
+				repair_message_ += "　開発：" + kisu_data@DataBase(ri, DB_MATERIAL3_INDEX@DataBase)
+				repair_message_ += "　改修：" + kisu_data@DataBase(ri, DB_SCREW3_INDEX@DataBase) + "\n"
+				if(kisu_data@DataBase(ri, DB_USE3_INDEX@DataBase) != "0"){
+					repair_message_ += "　装備：" + kisu_data@DataBase(ri, DB_WEAPON3_INDEX@DataBase) + "\n"
+				}
+				repair_message_ += "\n改修更新後 -->\n　" + kisu_data@DataBase(ri, DB_UPDATE_INDEX@DataBase) + "\n"
+			}
+			// ブクマチェックの表示を書き換える
+			if(instr(bookmark_weapon_list@Setting,,"'" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "'") == -1){
+				checkbox_favorite_flg@Setting = FALSE
+			}else{
+				checkbox_favorite_flg@Setting = TRUE
+			}
+			objprm checkbox_favorite_id@GUI, checkbox_favorite_flg@Setting
+			_break
+		next
+	return
+#global
+
+
+// データベースの初期化
+initDB
+// 設定の初期化
+initSetting
+// 画面の初期化
+initGUI
+// イベント待ち
+oncmd gosub *event, WM_COMMAND
+onexit gosub *exit
+refresh_listbox_flg = FALSE
+refresh_mesbox_flg = FALSE
+refresh_favorite_flg = FALSE
+exit_flg = FALSE
+repeat
+	if(exit_flg){
+		end
+	}
+	if(refresh_listbox_flg){
+		refreshListBox
+		refresh_listbox_flg = FALSE
+	}
+	if(refresh_mesbox_flg){
+		refreshMesBox
+		refresh_mesbox_flg = FALSE
+	}
+	if(refresh_favorite_flg){
+		changeFavorite
+		refresh_favorite_flg = FALSE
+	}
+	await 5
+loop
+
+// イベント駆動処理
+*event
+	// チェックボックスへの操作
+	for k, 0, DB_CLASS_COUNT@Setting
+		hCheckBox = objinfo(checkbox_class_id@Setting(k), 2)
+		if(lparam == hCheckBox){
+			refresh_listbox_flg = TRUE
+			_break
+		}
+	next
+	if(lparam == objinfo(checkbox_success_id@GUI, 2)){
+		refresh_listbox_flg = TRUE
+	}
+	if(lparam == objinfo(checkbox_favorite_id@GUI, 2)){
+		refresh_favorite_flg = TRUE
+	}
+	// リストボックスへの操作
+	if(lparam == objinfo(listbox_weapon_id@GUI, 2)){
+		refresh_mesbox_flg = TRUE
+	}
+	// コンボボックスへの操作
+	if(lparam == objinfo(combox_week_id@GUI, 2)){
+		refresh_listbox_flg = TRUE
+	}
+	if(lparam == objinfo(combox_step_id@GUI, 2)){
+		refresh_listbox_flg = TRUE
+	}
+return
+*exit
+	exit_flg = TRUE
+	saveSetting
+	oncmd 0
+	onexit 0
+return
