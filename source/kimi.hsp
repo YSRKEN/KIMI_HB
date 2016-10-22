@@ -398,6 +398,7 @@ refresh_listbox_flg = FALSE
 refresh_mesbox_flg = FALSE
 refresh_favorite_flg = FALSE
 exit_flg = FALSE
+shortcut_key_flg = FALSE
 repeat
 	if(exit_flg){
 		end
@@ -417,6 +418,23 @@ repeat
 	if(refresh_selectstate_flg){
 		changeSelectState
 		refresh_selectstate_flg = FALSE
+	}
+	//
+	stick key, 64
+	if(key & 64){	//Ctrl
+		getkey a, 'S'
+		if(a){
+			if(shortcut_key_flg == FALSE){
+				checkbox_favorite_flg@Setting = 1 - checkbox_favorite_flg@Setting
+				objprm checkbox_favorite_id@GUI, checkbox_favorite_flg@Setting
+				refresh_favorite_flg = TRUE
+				shortcut_key_flg = TRUE
+			}
+		}else{
+			shortcut_key_flg = FALSE
+		}
+	}else{
+		shortcut_key_flg = FALSE
 	}
 	await 5
 loop
