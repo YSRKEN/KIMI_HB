@@ -234,7 +234,7 @@
 		objenable use_weapon_list_id, 0
 		// リストボックス
 		POS_XY 0, 3
-		objsize OBJ_X2(3), OBJ_Y2(GUI_HEIGHT - 3)
+		objsize OBJ_X2(3), OBJ_Y2(GUI_HEIGHT - 4)
 		listbox listbox_weapon_index, OBJ_Y , ""
 		listbox_weapon_id = stat
 		// メッセージボックス
@@ -272,7 +272,6 @@
 				objenable checkbox_class_id@Setting(ci), 1
 			next
 			objenable combox_step_id, 1
-			objenable checkbox_favorite_id, 1
 			objenable use_weapon_list_id, 0
 		}else{
 			// 逆引き
@@ -280,7 +279,6 @@
 				objenable checkbox_class_id@Setting(ci), 0
 			next
 			objenable combox_step_id, 0
-			objenable checkbox_favorite_id, 0
 			objenable use_weapon_list_id, 1
 		}
 	return
