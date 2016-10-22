@@ -1,13 +1,13 @@
 /*
  * ソフト名：君の改修手帳
- * バージョン：1.0.1
+ * バージョン：1.0.2
  * 最終更新日：2016/10/22
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
-#define VERSION "1.0.1"
+#define VERSION "1.0.2"
 #define LAST_UP_DATE "2016/10/22"
 
 #const global TRUE 1
@@ -137,6 +137,28 @@
 				kisu_data(ri, ci) = temp(ci)
 			next
 		next
+		// 消費装備についてメモする
+		sdim use_weapon_list, 64, 5
+		use_weapon_list_size = 0
+		for ri, 0, db_row_size
+			for si, 0, 3
+				use_weapon_count = kisu_data(ri, DB_USE1_INDEX + si * 4)
+				use_weapon_name = kisu_data(ri, DB_WEAPON1_INDEX + si * 4)
+				if(use_weapon_count == "0") :_continue
+				if(use_weapon_name == "―") :_continue
+				flg = FALSE
+				for li, 0, use_weapon_list_size
+					if(use_weapon_list(li) == use_weapon_name){
+						flg = TRUE
+						_break
+					}
+				next
+				if(flg == FALSE){
+					use_weapon_list(use_weapon_list_size) = use_weapon_name
+					use_weapon_list_size++
+				}
+			next
+		next
 	return
 #global
 
@@ -189,17 +211,29 @@
 		chkbox "ブクマ", checkbox_favorite_flg@Setting
 		checkbox_favorite_id = stat
 		// コンボボックス
+		//
 		POS_XY 0, 0
 		objsize OBJ_X, OBJ_Y
 		combox_week_index = gettime(2)
-		combox combox_week_index,, "日曜日\n月曜日\n火曜日\n水曜日\n木曜日\n金曜日\n土曜日\n全て"
+		combox combox_week_index,, "日曜日\n月曜日\n火曜日\n水曜日\n木曜日\n金曜日\n土曜日\n全て\n逆引き"
 		combox_week_id = stat
+		//
 		POS_XY 0, 1
 		objsize OBJ_X2(2), OBJ_Y
 		combox combox_step_index@Setting,, "無印～☆+5\n☆+6～☆+9\n☆MAX"
 		combox_step_id = stat
-		// リストボックス
+		//
+		sdim use_weapon_list_str, 32000
+		for ui, 0, use_weapon_list_size@DataBase
+			use_weapon_list_str += use_weapon_list@DataBase(ui) + "\n"
+		next
 		POS_XY 0, 2
+		objsize OBJ_X2(2), OBJ_Y
+		combox use_weapon_list_index@Setting,, use_weapon_list_str
+		use_weapon_list_id = stat
+		objenable use_weapon_list_id, 0
+		// リストボックス
+		POS_XY 0, 3
 		objsize OBJ_X2(3), OBJ_Y2(GUI_HEIGHT - 3)
 		listbox listbox_weapon_index, OBJ_Y , ""
 		listbox_weapon_id = stat
@@ -230,6 +264,26 @@
 		// 検索結果を反映
 		objprm repair_message_id, repair_message
 	return
+	// 順引きと逆引きとを切り替え
+	#deffunc changeSelectState
+		if(combox_week_index@GUI != 8){
+			// 順引き
+			for ci, 0, DB_CLASS_COUNT@Setting
+				objenable checkbox_class_id@Setting(ci), 1
+			next
+			objenable combox_step_id, 1
+			objenable checkbox_favorite_id, 1
+			objenable use_weapon_list_id, 0
+		}else{
+			// 逆引き
+			for ci, 0, DB_CLASS_COUNT@Setting
+				objenable checkbox_class_id@Setting(ci), 0
+			next
+			objenable combox_step_id, 0
+			objenable checkbox_favorite_id, 0
+			objenable use_weapon_list_id, 1
+		}
+	return
 #global
 
 #module ViewModel
@@ -238,29 +292,42 @@
 		class_str.0 = "主砲", "副空", "魚雷", "艦載", "対潜", "電探", "他"
 		listbox_weapon_data_ = ""
 		for ri, 0, db_row_size@DataBase
-			// 曜日チェック(曜日を「全て」にしている場合を除く)
-			if(combox_week_index@GUI != 7){
-				if(kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + combox_week_index@GUI) == "×"){
+			// 曜日チェック
+			if(combox_week_index@GUI <= 7){
+				// 順引き
+				if(combox_week_index@GUI < 7){
+					if(kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + combox_week_index@GUI) == "×"){
+						_continue
+				}}
+				// 改修段階チェック
+				if((combox_step_index@Setting == 2) && (kisu_data@DataBase(ri, DB_UPDATE_INDEX@DataBase) == "―")){
 					_continue
 				}
-			}
-			// 改修段階チェック
-			if((combox_step_index@Setting == 2) && (kisu_data@DataBase(ri, DB_UPDATE_INDEX@DataBase) == "―")){
-				_continue
-			}
-			// 改修ジャンルチェック
-			if(instr(bookmark_weapon_list@Setting,,"'" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "'") == -1){
+				// 改修ジャンルチェック
+				if(instr(bookmark_weapon_list@Setting,,"'" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "'") == -1){
+					flg = FALSE
+					for k, 0, length(class_str)
+						if((kisu_data@DataBase(ri, DB_CLASS_INDEX@DataBase) == class_str(k)) && (checkbox_class_flg@Setting(k))){
+							flg = TRUE
+							_break
+						}
+					next
+					if(flg == FALSE) :_continue
+				}else{
+					if(checkbox_class_flg@Setting(DB_CLASS_COUNT@Setting - 1) == FALSE) :_continue
+				}
+			}else{if(combox_week_index@GUI == 8){
+				// 逆引き
 				flg = FALSE
-				for k, 0, length(class_str)
-					if((kisu_data@DataBase(ri, DB_CLASS_INDEX@DataBase) == class_str(k)) && (checkbox_class_flg@Setting(k))){
-						flg = TRUE
-						_break
-					}
+				use_weapon_name = use_weapon_list@DataBase(use_weapon_list_index@Setting)
+				for k, 0, 3
+					if(kisu_data@DataBase(ri, DB_USE1_INDEX@DataBase + k * 4) == "0") :_continue
+					if(kisu_data@DataBase(ri, DB_WEAPON1_INDEX@DataBase + k * 4) != use_weapon_name) :_continue
+					flg = TRUE
+					_break
 				next
 				if(flg == FALSE) :_continue
-			}else{
-				if(checkbox_class_flg@Setting(DB_CLASS_COUNT@Setting - 1) == FALSE) :_continue
-			}
+			}}
 			// リストに追加
 			screw_str = kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase + combox_step_index@Setting * 4)
 			split screw_str, "/", temp
@@ -326,6 +393,7 @@ initGUI
 // イベント待ち
 oncmd gosub *event, WM_COMMAND
 onexit gosub *exit
+refresh_selectstate_flg = FALSE
 refresh_listbox_flg = FALSE
 refresh_mesbox_flg = FALSE
 refresh_favorite_flg = FALSE
@@ -345,6 +413,10 @@ repeat
 	if(refresh_favorite_flg){
 		changeFavorite
 		refresh_favorite_flg = FALSE
+	}
+	if(refresh_selectstate_flg){
+		changeSelectState
+		refresh_selectstate_flg = FALSE
 	}
 	await 5
 loop
@@ -372,8 +444,12 @@ loop
 	// コンボボックスへの操作
 	if(lparam == objinfo(combox_week_id@GUI, 2)){
 		refresh_listbox_flg = TRUE
+		refresh_selectstate_flg = TRUE
 	}
 	if(lparam == objinfo(combox_step_id@GUI, 2)){
+		refresh_listbox_flg = TRUE
+	}
+	if(lparam == objinfo(use_weapon_list_id@GUI, 2)){
 		refresh_listbox_flg = TRUE
 	}
 return
