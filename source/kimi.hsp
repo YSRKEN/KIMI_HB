@@ -23,7 +23,9 @@
 		dim checkbox_class_flg, DB_CLASS_COUNT
 		checkbox_class_flg(0) = TRUE
 		// 確実化のチェック
-		checkbox_success_flg = false
+		checkbox_success_flg = FALSE
+		// 最前面のチェック
+		checkbox_active_flg = TRUE
 		// 改修段階
 		combox_step_index = 0
 		// ブクマした装備一覧
@@ -187,6 +189,7 @@
 	#deffunc initGUI
 		// 画面
 		screen 0, POS_X(GUI_WIDTH), POS_Y(GUI_HEIGHT)
+		changeActiveWindow
 		title SOFT_NAME@ + " Ver." + VERSION@ + " (" + LAST_UP_DATE@ + ")"
 		syscolor 15 :boxf
 		// チェックボックス
@@ -210,6 +213,10 @@
 		objsize OBJ_X2(1), OBJ_Y
 		chkbox "ブクマ", checkbox_favorite_flg@Setting
 		checkbox_favorite_id = stat
+		POS_XY 2, 1
+		objsize OBJ_X, OBJ_Y
+		chkbox "最前面", checkbox_active_flg@Setting
+		checkbox_active_id = stat
 		// コンボボックス
 		//
 		POS_XY 0, 0
@@ -280,6 +287,14 @@
 			next
 			objenable combox_step_id, 0
 			objenable use_weapon_list_id, 1
+		}
+	return
+	// 最前面か否かを切り替え
+	#deffunc changeActiveWindow
+		if(checkbox_active_flg@Setting){
+			gsel 0, 2
+		}else{
+			gsel 0, 1
 		}
 	return
 #global
@@ -396,6 +411,7 @@ refresh_selectstate_flg = FALSE
 refresh_listbox_flg = FALSE
 refresh_mesbox_flg = FALSE
 refresh_favorite_flg = FALSE
+refresh_active_flg = FALSE
 exit_flg = FALSE
 shortcut_key_flg = FALSE
 repeat
@@ -417,6 +433,10 @@ repeat
 	if(refresh_selectstate_flg){
 		changeSelectState
 		refresh_selectstate_flg = FALSE
+	}
+	if(refresh_active_flg){
+		changeActiveWindow
+		refresh_active_flg = FALSE
 	}
 	//
 	stick key, 64
@@ -453,6 +473,9 @@ loop
 	}
 	if(lparam == objinfo(checkbox_favorite_id@GUI, 2)){
 		refresh_favorite_flg = TRUE
+	}
+	if(lparam == objinfo(checkbox_active_id@GUI, 2)){
+		refresh_active_flg = TRUE
 	}
 	// リストボックスへの操作
 	if(lparam == objinfo(listbox_weapon_id@GUI, 2)){
