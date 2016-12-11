@@ -67,13 +67,14 @@
 		notesel listbox_weapon_data@GUI
 		noteget weapon_name, listbox_weapon_index@GUI
 		weapon_name = normName(weapon_name)
+		weapon_name_ = "'" + weapon_name + "'"
 		if(checkbox_favorite_flg){
-			if(instr(bookmark_weapon_list,,"'" + weapon_name + "'") == -1){
-				bookmark_weapon_list += "'" + weapon_name + "'"
+			if(instr(bookmark_weapon_list,,weapon_name_) == -1){
+				bookmark_weapon_list += weapon_name_
 			}
 		}else{
-			if(instr(bookmark_weapon_list,,"'" + weapon_name + "'") != -1){
-				strrep bookmark_weapon_list, "'" + weapon_name + "'", ""
+			if(instr(bookmark_weapon_list,,weapon_name_) != -1){
+				strrep bookmark_weapon_list, weapon_name_, ""
 			}
 		}
 	return
