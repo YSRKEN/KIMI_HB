@@ -1,14 +1,14 @@
 /*
  * ソフト名：君の改修手帳
  * バージョン：1.0.3
- * 最終更新日：2016/12/12
+ * 最終更新日：2017/01/10
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
 #define VERSION "1.0.3"
-#define LAST_UP_DATE "2016/12/12"
+#define LAST_UP_DATE "2017/01/10"
 
 #const global TRUE 1
 #const global FALSE 0
