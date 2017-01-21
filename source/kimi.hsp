@@ -1,14 +1,14 @@
 /*
  * ソフト名：君の改修手帳
- * バージョン：1.0.3
- * 最終更新日：2017/01/10
+ * バージョン：1.0.4
+ * 最終更新日：2017/01/21
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
-#define VERSION "1.0.3"
-#define LAST_UP_DATE "2017/01/10"
+#define VERSION "1.0.4"
+#define LAST_UP_DATE "2017/01/21"
 
 #const global TRUE 1
 #const global FALSE 0
@@ -395,6 +395,13 @@
 			repair_message_ += "鋼：" + kisu_data@DataBase(ri, DB_STEEL_INDEX@DataBase) + " "
 			repair_message_ += "ボ：" + kisu_data@DataBase(ri, DB_BAUXITE_INDEX@DataBase) + "\n"
 			for wi, 0, 7
+				// 指定曜日についての強調表示
+				if(combox_week_index@GUI < 7){
+					if(wi == combox_week_index@GUI){
+						repair_message_ += "　【" + week_str(wi) + "：" + kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + wi) + "】\n"
+						_continue
+					}
+				}
 				repair_message_ += "　　" + week_str(wi) + "：" + kisu_data@DataBase(ri, DB_SUN_INDEX@DataBase + wi) + "\n"
 			next
 			repair_message_ += "\n[無印～☆+5]\n"

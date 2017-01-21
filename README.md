@@ -7,6 +7,8 @@ Repair Weapon's List Viewer for Kantai Collection
 ![画面キャプチャ](https://cloud.githubusercontent.com/assets/3734392/19605691/638344f8-97f7-11e6-80d3-ad16dd3b3538.png)  
 　Ver.1.0.2からは、逆引き機能も実装しました。曜日欄を「逆引き」にすれば使用できます。
 ![画面キャプチャ2](https://cloud.githubusercontent.com/assets/3734392/19618259/08329f84-9880-11e6-9237-3bd77bd60ac7.png)  
+　Ver.1.0.3で最前面チェック、Ver.1.0.4でソートチェックを設けました。
+![画面キャプチャ3](https://cloud.githubusercontent.com/assets/3734392/22171598/bdb3c9b4-dfd4-11e6-8cea-8f7dc23c58c1.png)  
 ## 使い方
 　KISU手帳とほぼ同様です。  
 　ただし、艦載機および電探カテが増えたことと、ブラウザ上ではなくローカルで実行されるのが大きな違いです。  
@@ -14,6 +16,9 @@ Repair Weapon's List Viewer for Kantai Collection
 ## 注意
 　美しさのカケラもないUIですみません……。
 ## 更新履歴
+- Ver.1.0.4(2017/01/21)
+ - ネジ数ソートを実装
+ - 曜日を指定した際、その欄だけ強調表示されるように修正
 - Ver.1.0.3(2017/01/10)
  - ブクマした装備が☆にチェックを入れない際も表示されるように修正
  - 改修時の装備消費数も表示するようになった
