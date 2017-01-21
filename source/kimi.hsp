@@ -26,6 +26,8 @@
 		checkbox_success_flg = FALSE
 		// 最前面のチェック
 		checkbox_active_flg = TRUE
+		// ソートのチェック
+		checkbox_sort_flg = FALSE
 		// 改修段階
 		combox_step_index = 0
 		// ブクマした装備一覧
@@ -218,6 +220,10 @@
 		objsize OBJ_X, OBJ_Y
 		chkbox "最前面", checkbox_active_flg@Setting
 		checkbox_active_id = stat
+		POS_XY 2, 2
+		objsize OBJ_X, OBJ_Y
+		chkbox "ソート", checkbox_sort_flg@Setting
+		checkbox_sort_id = stat
 		// コンボボックス
 		//
 		POS_XY 0, 0
@@ -304,7 +310,10 @@
 	// 検索を実施して、リストボックスに反映する
 	#deffunc SearchMethod var listbox_weapon_data_
 		class_str.0 = "主砲", "副空", "魚雷", "艦載", "対潜", "電探", "他"
-		listbox_weapon_data_ = ""
+		// 検索を実施し、結果を配列に蓄える
+		dim weapon_data_screw_arr, 5
+		sdim weapon_data_name_arr, 64, 5
+		weapon_data_arr_size = 0
 		for ri, 0, db_row_size@DataBase
 			// 曜日チェック
 			if(combox_week_index@GUI <= 7){
@@ -346,7 +355,30 @@
 			// リストに追加
 			screw_str = kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase + combox_step_index@Setting * 4)
 			split screw_str, "/", temp
-			listbox_weapon_data_ += "[" + temp(checkbox_success_flg@Setting) + "]" + kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase) + "\n"
+			weapon_data_screw_arr(weapon_data_arr_size) = int(temp(checkbox_success_flg@Setting))
+			weapon_data_name_arr(weapon_data_arr_size) = kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase)
+			weapon_data_arr_size++
+		next
+		// 配列をソート
+		if(checkbox_sort_flg@Setting){
+			for wi, 0, weapon_data_arr_size - 1
+				for wj, wi + 1, weapon_data_arr_size
+					if(weapon_data_screw_arr(wi) > weapon_data_screw_arr(wj)){
+						temp = weapon_data_screw_arr(wi)
+						weapon_data_screw_arr(wi) = weapon_data_screw_arr(wj)
+						weapon_data_screw_arr(wj) = temp
+						sdim temp, 64
+						temp = weapon_data_name_arr(wi)
+						weapon_data_name_arr(wi) = weapon_data_name_arr(wj)
+						weapon_data_name_arr(wj) = temp
+					}
+				next
+			next
+		}
+		// 結果を書き出す
+		listbox_weapon_data_ = ""
+		for wi, 0, weapon_data_arr_size
+			listbox_weapon_data_ += "[" + weapon_data_screw_arr(wi) + "]" + weapon_data_name_arr(wi) + "\n"
 		next
 	return
 	// 選択したリストの項目について表示する
@@ -477,6 +509,9 @@ loop
 	}
 	if(lparam == objinfo(checkbox_active_id@GUI, 2)){
 		refresh_active_flg = TRUE
+	}
+	if(lparam == objinfo(checkbox_sort_id@GUI, 2)){
+		refresh_listbox_flg = TRUE
 	}
 	// リストボックスへの操作
 	if(lparam == objinfo(listbox_weapon_id@GUI, 2)){
