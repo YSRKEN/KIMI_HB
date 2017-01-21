@@ -60,6 +60,14 @@
 				if(temp(0) == "bookmark_weapon_list"){
 					bookmark_weapon_list = temp(1)
 				}
+				if(temp(0) == "checkbox_active_flg"){
+					checkbox_active_flg = int(temp(1))
+					if(checkbox_active_flg != 0) :checkbox_active_flg = 1
+				}
+				if(temp(0) == "checkbox_sort_flg"){
+					checkbox_sort_flg = int(temp(1))
+					if(checkbox_sort_flg != 0) :checkbox_sort_flg = 1
+				}
 			next
 		}
 	return
@@ -92,6 +100,8 @@
 		save_text += "checkbox_success_flg:" + checkbox_success_flg + "\n"
 		save_text += "combox_step_index:" + combox_step_index + "\n"
 		save_text += "bookmark_weapon_list:" + bookmark_weapon_list + "\n"
+		save_text += "checkbox_active_flg:" + checkbox_active_flg + "\n"
+		save_text += "checkbox_sort_flg:" + checkbox_sort_flg + "\n"
 		notesel save_text
 		notesave "save_data.ini"
 	return
