@@ -1,18 +1,27 @@
 /*
  * ソフト名：君の改修手帳
- * バージョン：1.0.4
- * 最終更新日：2017/01/21
+ * バージョン：1.0.5
+ * 最終更新日：2017/03/12
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
-#define VERSION "1.0.4"
-#define LAST_UP_DATE "2017/01/21"
+#define VERSION "1.0.5"
+#define LAST_UP_DATE "2017/03/12"
 
 #const global TRUE 1
 #const global FALSE 0
 #const WM_COMMAND $111
+
+#module Utility
+	#defcfunc toInt str num_str
+	if(num_str == "?" || num_str == "") :return -1
+	return int(num_str)
+	#defcfunc toStr int num
+	if(num == -1) :return "?"
+	return str(num)
+#global
 
 #module Setting
 	// 表示ジャンル選択時のチェック数
@@ -365,7 +374,7 @@
 			// リストに追加
 			screw_str = kisu_data@DataBase(ri, DB_SCREW1_INDEX@DataBase + combox_step_index@Setting * 4)
 			split screw_str, "/", temp
-			weapon_data_screw_arr(weapon_data_arr_size) = int(temp(checkbox_success_flg@Setting))
+			weapon_data_screw_arr(weapon_data_arr_size) = toInt(temp(checkbox_success_flg@Setting))
 			weapon_data_name_arr(weapon_data_arr_size) = kisu_data@DataBase(ri, DB_NAME_INDEX@DataBase)
 			weapon_data_arr_size++
 		next
@@ -388,7 +397,7 @@
 		// 結果を書き出す
 		listbox_weapon_data_ = ""
 		for wi, 0, weapon_data_arr_size
-			listbox_weapon_data_ += "[" + weapon_data_screw_arr(wi) + "]" + weapon_data_name_arr(wi) + "\n"
+			listbox_weapon_data_ += "[" + toStr(weapon_data_screw_arr(wi)) + "]" + weapon_data_name_arr(wi) + "\n"
 		next
 	return
 	// 選択したリストの項目について表示する
@@ -446,7 +455,6 @@
 		next
 	return
 #global
-
 
 // データベースの初期化
 initDB
