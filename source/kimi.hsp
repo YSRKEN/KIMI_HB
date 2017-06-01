@@ -1,14 +1,14 @@
 /*
  * ソフト名：君の改修手帳
- * バージョン：1.0.5
- * 最終更新日：2017/03/12
+ * バージョン：1.0.6
+ * 最終更新日：2017/06/01
  */
 
 #packopt name "kimi"
 
 #define SOFT_NAME "君の改修手帳"
-#define VERSION "1.0.5"
-#define LAST_UP_DATE "2017/03/12"
+#define VERSION "1.0.6"
+#define LAST_UP_DATE "2017/06/01"
 
 #const global TRUE 1
 #const global FALSE 0
@@ -87,6 +87,7 @@
 		noteget weapon_name, listbox_weapon_index@GUI
 		weapon_name = normName(weapon_name)
 		weapon_name_ = "'" + weapon_name + "'"
+		if(weapon_name_ == "''") :return // 危険避け
 		if(checkbox_favorite_flg){
 			if(instr(bookmark_weapon_list,,weapon_name_) == -1){
 				bookmark_weapon_list += weapon_name_
