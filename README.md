@@ -9,6 +9,8 @@ Repair Weapon's List Viewer for Kantai Collection
 ![画面キャプチャ2](https://cloud.githubusercontent.com/assets/3734392/19618259/08329f84-9880-11e6-9237-3bd77bd60ac7.png)  
 　Ver.1.0.3で最前面チェック、Ver.1.0.4でソートチェックを設けました。
 ![画面キャプチャ3](https://cloud.githubusercontent.com/assets/3734392/22171598/bdb3c9b4-dfd4-11e6-8cea-8f7dc23c58c1.png)  
+　Ver.1.1.0で改修メモ機能を実装しました。一部の装備については、改修メモが表示されます。
+![画面キャプチャ4](https://user-images.githubusercontent.com/3734392/34526064-9158b6be-f0e4-11e7-8045-6e250a3734fc.png)  
 ## 使い方
 　KISU手帳とほぼ同様です。  
 　ただし、艦載機および電探カテが増えたことと、ブラウザ上ではなくローカルで実行されるのが大きな違いです。  
@@ -16,6 +18,9 @@ Repair Weapon's List Viewer for Kantai Collection
 ## 注意
 　美しさのカケラもないUIですみません……。
 ## 更新履歴
+- Ver.1.1.0(2018/01/04)
+ - 新装備を大幅に追加
+ - 「改修メモ」を該当装備に表示するようにした
 - Ver.1.0.7(2017/06/11)
  - 瑞穂が改修に関わる装備(零観など)の曜日設定が更新されていたので修正
 - Ver.1.0.6(2017/06/01)
