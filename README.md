@@ -18,6 +18,8 @@ Repair Weapon's List Viewer for Kantai Collection
 ## 注意
 　美しさのカケラもないUIですみません……。
 ## 更新履歴
+- Ver.1.1.1 final(2018/07/28)
+ - 新装備を大幅に追加
 - Ver.1.1.0(2018/01/04)
  - 新装備を大幅に追加
  - 「改修メモ」を該当装備に表示するようにした
